@@ -31,7 +31,13 @@ jobs:
             || sudo apt-get install -y --no-install-recommends libturbojpeg0
 
       - name: Sync dependencies
-        run: uv sync --frozen
+        run: uv sync
+
+      - name: Upload lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: uv-lock
+          path: uv.lock
 
       - name: Ruff format check
         run: uv run ruff format --check custom_components tests scripts
