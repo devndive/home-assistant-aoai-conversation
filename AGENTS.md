@@ -14,8 +14,9 @@ isolated** so upstream syncs stay easy. Latest HA only; **no backwards compatibi
 
 ## Golden rules (read before changing anything)
 
-1. **Pin `openai==3.10.0`.** HA 2026.10.x constrains `openai==3.10.0`; a different
-   exact version makes HA fail to install the integration (`RequirementsNotFound`).
+1. **Require `openai>=3.10.0`** (the version HA 2026.10.x constrains). Never go below
+   HA's constraint, or HA fails to install the integration (`RequirementsNotFound`);
+   never use an exact `==` pin, since hassfest rejects exact pins of packages HA ships.
    Keep `manifest.json` requirements **and** `pyproject.toml`
    `[project].dependencies` aligned with Home Assistant.
 2. **Use `probatio`, not `voluptuous`/`voluptuous_openapi`.** HA 2026.10 replaced them
