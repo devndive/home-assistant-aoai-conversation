@@ -21,4 +21,11 @@ config/
 
 # Local smoketest secrets & output (never commit)
 .env
+.envrc
 smoketest-output/
+
+# Local Copilot CLI MCP config (contains bearer tokens)
+.mcp.json
+
+# Local Azure CLI state
+.azure/
