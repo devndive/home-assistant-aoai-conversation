@@ -6,8 +6,7 @@ import logging
 from typing import Any, override
 
 import openai
-import voluptuous as vol
-from voluptuous_openapi import convert
+import probatio
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
@@ -117,10 +116,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_ENDPOINT): str,
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_ENDPOINT): str,
     }
 )
 
@@ -297,12 +296,12 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 default_name = DEFAULT_AI_TASK_NAME
             else:
                 default_name = DEFAULT_CONVERSATION_NAME
-            step_schema[vol.Required(CONF_NAME, default=default_name)] = str
+            step_schema[probatio.Required(CONF_NAME, default=default_name)] = str
 
         if self._subentry_type == "conversation":
             step_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PROMPT,
                         description={
                             "suggested_value": options.get(
@@ -310,7 +309,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                             )
                         },
                     ): TemplateSelector(),
-                    vol.Optional(CONF_LLM_HASS_API): SelectSelector(
+                    probatio.Optional(CONF_LLM_HASS_API): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
                     ),
                 }
@@ -320,7 +319,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         # (deployment names vary). Optional here because the conversation may
         # instead target a Foundry agent (agent mode) below.
         step_schema[
-            vol.Optional(
+            probatio.Optional(
                 CONF_CHAT_MODEL,
                 description={"suggested_value": options.get(CONF_CHAT_MODEL)},
             )
@@ -330,17 +329,17 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if self._subentry_type == "conversation":
             step_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_AGENT_ENDPOINT,
                         description={
                             "suggested_value": options.get(CONF_AGENT_ENDPOINT)
                         },
                     ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_AGENT_NAME,
                         description={"suggested_value": options.get(CONF_AGENT_NAME)},
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_AGENT_VERSION,
                         description={
                             "suggested_value": options.get(CONF_AGENT_VERSION)
@@ -350,7 +349,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             )
 
         step_schema[
-            vol.Required(CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False))
+            probatio.Required(
+                CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
+            )
         ] = bool
 
         if user_input is not None:
@@ -402,7 +403,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return self.async_show_form(
                 step_id="init",
                 data_schema=self.add_suggested_values_to_schema(
-                    vol.Schema(step_schema), options
+                    probatio.Schema(step_schema), options
                 ),
                 errors=errors,
             )
@@ -410,7 +411,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), options
+                probatio.Schema(step_schema), options
             ),
         )
 
@@ -422,19 +423,19 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         step_schema: VolDictType = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_MAX_TOKENS,
                 default=RECOMMENDED_MAX_TOKENS,
             ): int,
-            vol.Optional(
+            probatio.Optional(
                 CONF_TOP_P,
                 default=RECOMMENDED_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
+            probatio.Optional(
                 CONF_TEMPERATURE,
                 default=RECOMMENDED_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
-            vol.Optional(
+            probatio.Optional(
                 CONF_STORE_RESPONSES,
                 default=RECOMMENDED_STORE_RESPONSES,
             ): bool,
@@ -448,7 +449,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="additional",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), options
+                probatio.Schema(step_schema), options
             ),
             errors=errors,
         )
@@ -467,7 +468,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if not model.startswith(tuple(UNSUPPORTED_CODE_INTERPRETER_MODELS)):
             step_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_CODE_INTERPRETER,
                         default=RECOMMENDED_CODE_INTERPRETER,
                     ): bool,
@@ -479,7 +480,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if reasoning_options := self._get_reasoning_options(model):
             step_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_REASONING_EFFORT,
                         default=RECOMMENDED_REASONING_EFFORT,
                     ): SelectSelector(
@@ -497,7 +498,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if model.startswith("gpt-5.6"):
             step_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PRO_MODE,
                         default=RECOMMENDED_PRO_MODE,
                     ): bool,
@@ -509,7 +510,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if model.startswith("gpt-5"):
             step_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_VERBOSITY,
                         default=RECOMMENDED_VERBOSITY,
                     ): SelectSelector(
@@ -536,7 +537,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 options[CONF_REASONING_SUMMARY] = stored_summary
             step_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_REASONING_SUMMARY,
                         default=stored_summary,
                     ): SelectSelector(
@@ -554,7 +555,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         service_tiers = self._get_service_tiers(model)
         if "flex" in service_tiers or "priority" in service_tiers:
             step_schema[
-                vol.Optional(
+                probatio.Optional(
                     CONF_SERVICE_TIER,
                     default=RECOMMENDED_SERVICE_TIER,
                 )
@@ -575,11 +576,11 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         ):
             step_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH,
                         default=RECOMMENDED_WEB_SEARCH,
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH_CONTEXT_SIZE,
                         default=RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
                     ): SelectSelector(
@@ -589,11 +590,11 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH_USER_LOCATION,
                         default=RECOMMENDED_WEB_SEARCH_USER_LOCATION,
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH_INLINE_CITATIONS,
                         default=RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
                     ): bool,
@@ -620,7 +621,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             tuple(UNSUPPORTED_IMAGE_MODELS)
         ):
             step_schema[
-                vol.Optional(CONF_IMAGE_MODEL, default=RECOMMENDED_IMAGE_MODEL)
+                probatio.Optional(CONF_IMAGE_MODEL, default=RECOMMENDED_IMAGE_MODEL)
             ] = SelectSelector(
                 SelectSelectorConfig(
                     options=[
@@ -670,7 +671,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="model",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), options
+                probatio.Schema(step_schema), options
             ),
             errors=errors,
         )
@@ -724,15 +725,15 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 self._get_entry().data[CONF_API_KEY],
                 self._get_entry().data[CONF_ENDPOINT],
             )
-            location_schema = vol.Schema(
+            location_schema = probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH_CITY,
                         description=(
                             "Free text input for the city, e.g. `San Francisco`"
                         ),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH_REGION,
                         description="Free text input for the region, e.g. `California`",
                     ): str,
@@ -754,7 +755,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         "name": "approximate_location",
                         "description": "Approximate location data of the user "
                         "for refined web search results",
-                        "schema": convert(location_schema),
+                        "schema": probatio.to_openapi(
+                            location_schema, openapi_version="3.1.0"
+                        ),
                         "strict": False,
                     }
                 },
@@ -810,17 +813,17 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
         step_schema: VolDictType = {}
 
         if self._is_new:
-            step_schema[vol.Required(CONF_NAME, default=DEFAULT_STT_NAME)] = str
+            step_schema[probatio.Required(CONF_NAME, default=DEFAULT_STT_NAME)] = str
 
         step_schema.update(
             {
-                vol.Required(CONF_STT_ENDPOINT): TextSelector(
+                probatio.Required(CONF_STT_ENDPOINT): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.URL)
                 ),
-                vol.Required(CONF_STT_API_KEY): TextSelector(
+                probatio.Required(CONF_STT_API_KEY): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.PASSWORD)
                 ),
-                vol.Optional(CONF_STT_LANGUAGE, default=DEFAULT_STT_LANGUAGE): str,
+                probatio.Optional(CONF_STT_LANGUAGE, default=DEFAULT_STT_LANGUAGE): str,
             }
         )
 
@@ -841,7 +844,7 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), options
+                probatio.Schema(step_schema), options
             ),
             errors=errors,
         )
@@ -884,18 +887,20 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
         step_schema: VolDictType = {}
 
         if self._is_new:
-            step_schema[vol.Required(CONF_NAME, default=DEFAULT_TTS_NAME)] = str
+            step_schema[probatio.Required(CONF_NAME, default=DEFAULT_TTS_NAME)] = str
 
         step_schema.update(
             {
-                vol.Required(CONF_TTS_ENDPOINT): TextSelector(
+                probatio.Required(CONF_TTS_ENDPOINT): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.URL)
                 ),
-                vol.Required(CONF_TTS_API_KEY): TextSelector(
+                probatio.Required(CONF_TTS_API_KEY): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.PASSWORD)
                 ),
-                vol.Optional(CONF_TTS_VOICE, default=DEFAULT_TTS_VOICE): TextSelector(),
-                vol.Optional(
+                probatio.Optional(
+                    CONF_TTS_VOICE, default=DEFAULT_TTS_VOICE
+                ): TextSelector(),
+                probatio.Optional(
                     CONF_TTS_OUTPUT_FORMAT, default=DEFAULT_TTS_OUTPUT_FORMAT
                 ): SelectSelector(
                     SelectSelectorConfig(
@@ -903,9 +908,9 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
-                vol.Optional(CONF_TTS_RATE): str,
-                vol.Optional(CONF_TTS_PITCH): str,
-                vol.Optional(CONF_TTS_STYLE): str,
+                probatio.Optional(CONF_TTS_RATE): str,
+                probatio.Optional(CONF_TTS_PITCH): str,
+                probatio.Optional(CONF_TTS_STYLE): str,
             }
         )
 
@@ -926,7 +931,7 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), options
+                probatio.Schema(step_schema), options
             ),
             errors=errors,
         )

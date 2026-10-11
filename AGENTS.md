@@ -18,11 +18,14 @@ isolated** so upstream syncs stay easy. Latest HA only; **no backwards compatibi
    exact version makes HA fail to install the integration (`RequirementsNotFound`).
    Keep `manifest.json` requirements **and** `pyproject.toml`
    `[project].dependencies` aligned with Home Assistant.
-2. **Keep the Azure delta isolated.** LLM client lives in `client.py`; Speech REST lives
+2. **Use `probatio`, not `voluptuous`/`voluptuous_openapi`.** HA 2026.10 replaced them
+   (`probatio.Schema`, `probatio.to_openapi(..., openapi_version="3.1.0")`); importing the
+   old modules makes the config flow fail to load.
+3. **Keep the Azure delta isolated.** LLM client lives in `client.py`; Speech REST lives
    in `speech.py`; entity/conversation/ai_task are ~verbatim upstream. Don't scatter
    Azure specifics into ported files.
-3. **STT/TTS are hard-wired to Azure Speech** — no OpenAI audio models, no toggles.
-4. **Config subentry architecture** (parent connection entry + per-entity subentries).
+4. **STT/TTS are hard-wired to Azure Speech** — no OpenAI audio models, no toggles.
+5. **Config subentry architecture** (parent connection entry + per-entity subentries).
    Don't reintroduce the legacy flat single-entry design.
 
 ## Architecture & config model

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import openai
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_PROMPT, Platform
@@ -76,15 +76,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_GENERATE_CONTENT,
         send_prompt,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required("config_entry"): selector.ConfigEntrySelector(
+                probatio.Required("config_entry"): selector.ConfigEntrySelector(
                     {
                         "integration": DOMAIN,
                     }
                 ),
-                vol.Required(CONF_PROMPT): cv.string,
-                vol.Optional(CONF_FILENAMES, default=[]): vol.All(
+                probatio.Required(CONF_PROMPT): cv.string,
+                probatio.Optional(CONF_FILENAMES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
             }
@@ -96,19 +96,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_GENERATE_IMAGE,
         render_image,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required("config_entry"): selector.ConfigEntrySelector(
+                probatio.Required("config_entry"): selector.ConfigEntrySelector(
                     {
                         "integration": DOMAIN,
                     }
                 ),
-                vol.Required(CONF_PROMPT): cv.string,
-                vol.Optional("size", default="1024x1024"): vol.In(
+                probatio.Required(CONF_PROMPT): cv.string,
+                probatio.Optional("size", default="1024x1024"): probatio.In(
                     ("1024x1024", "1024x1792", "1792x1024")
                 ),
-                vol.Optional("quality", default="standard"): vol.In(("standard", "hd")),
-                vol.Optional("style", default="vivid"): vol.In(("vivid", "natural")),
+                probatio.Optional("quality", default="standard"): probatio.In(
+                    ("standard", "hd")
+                ),
+                probatio.Optional("style", default="vivid"): probatio.In(
+                    ("vivid", "natural")
+                ),
             }
         ),
         supports_response=SupportsResponse.ONLY,
