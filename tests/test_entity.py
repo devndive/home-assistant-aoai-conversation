@@ -78,7 +78,9 @@ async def test_model_request_parameters(
     chat_log.content = [conversation.UserContent(content="Hello")]
     chat_log.llm_api = None
     chat_log.unresponded_tool_results = False
-    chat_log.async_add_delta_content_stream.side_effect = lambda _entity_id, stream: stream
+    chat_log.async_add_delta_content_stream.side_effect = (
+        lambda _entity_id, stream: stream
+    )
 
     async with (
         httpx.AsyncClient(transport=httpx.MockTransport(handle_request)) as http_client,
